@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useState, type CSSProperties } from 'react'
 import {
   Activity,
   ArrowUpRight,
@@ -36,6 +36,35 @@ const initialActivity = [
   { time: '09:28', label: 'Workspace indexed', detail: 'NOVA / Personal OS', tone: 'blue' },
   { time: '09:14', label: 'Focus mode activated', detail: 'Deep work · 45 min', tone: 'violet' },
 ]
+
+const particles = Array.from({ length: 76 }, (_, index) => {
+  const angle = (index / 76) * Math.PI * 2
+  const radius = 42 + ((index * 17) % 55)
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+    size: 1 + (index % 3),
+    delay: `${(index % 13) * -0.18}s`,
+    duration: `${2.8 + (index % 7) * 0.34}s`,
+  }
+})
+
+function IntelligenceField() {
+  return (
+    <div className="intelligence-field" aria-hidden="true">
+      <div className="field-glow" />
+      <div className="field-wave wave-a" />
+      <div className="field-wave wave-b" />
+      <div className="field-wave wave-c" />
+      <div className="particle-cloud">
+        {particles.map((particle, index) => (
+          <span key={index} className="particle" style={{ '--x': `${particle.x}px`, '--y': `${particle.y}px`, '--size': `${particle.size}px`, '--delay': particle.delay, '--duration': particle.duration } as CSSProperties} />
+        ))}
+      </div>
+      <div className="field-kernel"><span /><span /><span /></div>
+    </div>
+  )
+}
 
 export default function Page() {
   const [activeRail, setActiveRail] = useState('Orbit')
@@ -96,8 +125,7 @@ export default function Page() {
           <section className={`orb-stage ${orbState}`} aria-label="NOVA intelligence core">
             <div className="stage-readout top-readout"><span className="readout-dot" />{orbState === 'thinking' ? 'PROCESSING SIGNAL' : isListening ? 'LISTENING' : 'AWAITING INPUT'}</div>
             <div className="orb-wrap" onClick={() => setIsListening(!isListening)} role="button" tabIndex={0} aria-label="Toggle listening mode" onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setIsListening(!isListening) }}>
-              <div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="orbit orbit-three" />
-              <div className="orb-bloom" /><div className="orb-core"><span /><span /><span /></div><div className="orb-sheen" />
+              <IntelligenceField />
             </div>
             <div className="stage-readout bottom-readout"><span>01</span><div className="readout-line" /><span>07</span></div>
             <div className="orb-caption"><span className="caption-icon"><Sparkles size={13} /></span><span>Ask NOVA anything</span><kbd>⌘ K</kbd></div>
