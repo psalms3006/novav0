@@ -1,170 +1,48 @@
 'use client'
 
-import { FormEvent, useState, type CSSProperties } from 'react'
-import {
-  Activity,
-  ArrowUpRight,
-  Bell,
-  Command,
-  Cpu,
-  Database,
-  Grid2X2,
-  Headphones,
-  Home,
-  LayoutGrid,
-  Mic,
-  MoreHorizontal,
-  Network,
-  Search,
-  Send,
-  Settings2,
-  Sparkles,
-  Terminal,
-  WandSparkles,
-  X,
-} from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
+import { Activity, Bell, Bot, ChevronLeft, ChevronRight, CircleHelp, FileText, FolderOpen, Gauge, Headphones, Home, Layers3, MemoryStick, Mic, Monitor, MoreHorizontal, Play, Search, Settings2, Sparkles, Square, Terminal, Wifi, X, Zap } from 'lucide-react'
 
-const railItems = [
-  { label: 'Orbit', icon: Home },
-  { label: 'Signals', icon: Activity },
-  { label: 'Systems', icon: Database },
-  { label: 'Spaces', icon: LayoutGrid },
+const nav = [
+  { label: 'Presence', icon: Home }, { label: 'Tasks', icon: Zap }, { label: 'Memory', icon: MemoryStick }, { label: 'Files', icon: FolderOpen }, { label: 'Skills', icon: Layers3 }, { label: 'Settings', icon: Settings2 },
 ]
+const particles = Array.from({ length: 92 }, (_, i) => { const a = i * 2.399; const r = 52 + (i % 11) * 7; return { x: Math.cos(a) * r, y: Math.sin(a) * r, s: i % 3 === 0 ? 3 : 1 + i % 2, d: `${-(i % 15) / 2}s` } })
 
-const workspaceCopy = {
-  Orbit: { eyebrow: 'INTELLIGENCE CORE', title: 'Good morning, Alex.', subtitle: 'Your ambient intelligence is ready.' },
-  Signals: { eyebrow: 'SIGNAL DECK', title: 'See what matters now.', subtitle: 'NOVA found 7 threads across your active contexts.' },
-  Systems: { eyebrow: 'SYSTEMS MAP', title: 'Everything is connected.', subtitle: 'Trace the tools, people, and processes behind your work.' },
-  Spaces: { eyebrow: 'YOUR SPACES', title: 'Choose a direction.', subtitle: 'Move between focused environments without losing the thread.' },
-} as const
+function IntelligenceCore({ state }: { state: string }) {
+  return <div className={`core ${state}`} aria-label={`NOVA is ${state}`}>
+    <div className="core-aura" />
+    <div className="core-wave wave-one" /><div className="core-wave wave-two" /><div className="core-wave wave-three" />
+    <div className="core-particles">{particles.map((p, i) => <i key={i} style={{ '--x': `${p.x}px`, '--y': `${p.y}px`, '--s': `${p.s}px`, '--d': p.d } as CSSProperties} />)}</div>
+    <div className="core-heart"><span /><span /><span /></div>
+  </div>
+}
 
-const signalCards = [
-  { label: 'Creative direction', meta: '3 new references · high relevance', tone: 'cyan' },
-  { label: 'Launch narrative', meta: 'Mentioned across 4 workspaces', tone: 'violet' },
-  { label: 'Calendar pressure', meta: 'Two conflicts detected this week', tone: 'blue' },
-]
-
-const initialActivity = [
-  { time: '09:42', label: 'Morning synthesis complete', detail: '4 signals · 2 priorities', tone: 'cyan' },
-  { time: '09:28', label: 'Workspace indexed', detail: 'NOVA / Personal OS', tone: 'blue' },
-  { time: '09:14', label: 'Focus mode activated', detail: 'Deep work · 45 min', tone: 'violet' },
-]
-
-const particles = Array.from({ length: 76 }, (_, index) => {
-  const angle = (index / 76) * Math.PI * 2
-  const radius = 42 + ((index * 17) % 55)
-  return {
-    x: Math.cos(angle) * radius,
-    y: Math.sin(angle) * radius,
-    size: 1 + (index % 3),
-    delay: `${(index % 13) * -0.18}s`,
-    duration: `${2.8 + (index % 7) * 0.34}s`,
-  }
-})
-
-function IntelligenceField() {
-  return (
-    <div className="intelligence-field" aria-hidden="true">
-      <div className="field-glow" />
-      <div className="field-wave wave-a" />
-      <div className="field-wave wave-b" />
-      <div className="field-wave wave-c" />
-      <div className="particle-cloud">
-        {particles.map((particle, index) => (
-          <span key={index} className="particle" style={{ '--x': `${particle.x}px`, '--y': `${particle.y}px`, '--size': `${particle.size}px`, '--delay': particle.delay, '--duration': particle.duration } as CSSProperties} />
-        ))}
-      </div>
-      <div className="field-kernel"><span /><span /><span /></div>
-    </div>
-  )
+function AmbientOrb({ state, onExpand, onToggle }: { state: string; onExpand: () => void; onToggle: () => void }) {
+  return <aside className="ambient-orb" aria-label="NOVA ambient presence">
+    <button className="mini-core" onClick={onExpand} aria-label="Expand NOVA"><IntelligenceCore state={state} /></button>
+    <div className="ambient-copy"><span>NOVA</span><strong>{state === 'listening' ? 'Listening' : state === 'thinking' ? 'Thinking' : 'Present'}</strong></div>
+    <button className="orb-stop" onClick={onToggle} aria-label="Toggle listening">{state === 'listening' ? <X size={12} /> : <Mic size={12} />}</button>
+  </aside>
 }
 
 export default function Page() {
-  const [activeRail, setActiveRail] = useState('Orbit')
-  const [isListening, setIsListening] = useState(false)
+  const [active, setActive] = useState('Presence')
+  const [state, setState] = useState('ready')
   const [command, setCommand] = useState('')
-  const [activity, setActivity] = useState(initialActivity)
-  const [orbState, setOrbState] = useState('ready')
-
-  function submitCommand(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const trimmed = command.trim()
-    if (!trimmed) return
-    setOrbState('thinking')
-    setActivity((items) => [
-      { time: 'now', label: 'Command received', detail: trimmed, tone: 'cyan' },
-      ...items.slice(0, 2),
-    ])
-    setCommand('')
-    window.setTimeout(() => setOrbState('ready'), 1600)
-  }
-
-  return (
-    <main className="nova-shell">
-      <div className="ambient-grid" aria-hidden="true" />
-      <aside className="nova-rail" aria-label="Primary navigation">
-        <div className="nova-mark"><span>N</span></div>
-        <div className="rail-stack">
-          {railItems.map(({ label, icon: Icon }) => (
-            <button key={label} className={`rail-button ${activeRail === label ? 'is-active' : ''}`} onClick={() => setActiveRail(label)} aria-label={label} aria-pressed={activeRail === label}>
-              <Icon size={18} strokeWidth={1.7} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="rail-bottom">
-          <button className="rail-button" aria-label="Settings"><Settings2 size={18} strokeWidth={1.7} /></button>
-          <div className="avatar" aria-label="User profile">AR</div>
-        </div>
-      </aside>
-
-      <section className="nova-content">
-        <header className="topbar">
-          <div className="breadcrumb"><span className="eyebrow">NOVA</span><span className="slash">/</span><span>{activeRail}</span></div>
-          <div className="top-actions">
-            <span className="system-status"><i /> All systems nominal</span>
-            <button className="icon-button" aria-label="Search"><Search size={16} /></button>
-            <button className="icon-button" aria-label="Notifications"><Bell size={16} /><b /></button>
-            <button className="icon-button" aria-label="More options"><MoreHorizontal size={17} /></button>
-          </div>
-        </header>
-
-        <div className="workspace">
-          <div className="workspace-heading">
-            <div><p className="micro-label">{workspaceCopy[activeRail as keyof typeof workspaceCopy].eyebrow} <span>● ONLINE</span></p><h1>{workspaceCopy[activeRail as keyof typeof workspaceCopy].title}</h1><p className="subheading">{workspaceCopy[activeRail as keyof typeof workspaceCopy].subtitle}</p></div>
-            <button className="date-chip"><span>MON</span> 24 AUG 2026 <ArrowUpRight size={13} /></button>
-          </div>
-
-          {activeRail === 'Signals' && <section className="signal-deck" aria-label="Signal review workflow">
-            <div className="deck-head"><div><p className="micro-label">REVIEW QUEUE</p><strong>Three threads want your attention</strong></div><span className="queue-count">03</span></div>
-            <div className="signal-list">{signalCards.map((signal) => <button className="signal-card" key={signal.label} onClick={() => { setCommand(`Open ${signal.label}`); setOrbState('thinking') }}><span className={`activity-dot ${signal.tone}`} /><span><strong>{signal.label}</strong><small>{signal.meta}</small></span><ArrowUpRight size={14} /></button>)}</div>
-          </section>}
-
-          <section className={`orb-stage ${orbState} ${activeRail !== 'Orbit' ? 'compact' : ''}`} aria-label="NOVA intelligence core">
-            <div className="stage-readout top-readout"><span className="readout-dot" />{orbState === 'thinking' ? 'PROCESSING SIGNAL' : isListening ? 'LISTENING' : 'AWAITING INPUT'}</div>
-            <div className="orb-wrap" onClick={() => setIsListening(!isListening)} role="button" tabIndex={0} aria-label="Toggle listening mode" onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setIsListening(!isListening) }}>
-              <IntelligenceField />
-            </div>
-            <div className="stage-readout bottom-readout"><span>01</span><div className="readout-line" /><span>07</span></div>
-            <div className="orb-caption"><span className="caption-icon"><Sparkles size={13} /></span><span>Ask NOVA anything</span><kbd>⌘ K</kbd></div>
-          </section>
-
-          <div className="lower-grid">
-            <div className="quick-actions"><p className="micro-label">QUICK LAUNCH</p><div className="action-row"><button><WandSparkles size={15} />Synthesize day</button><button><Network size={15} />Map my signals</button><button><Terminal size={15} />Open command line</button></div></div>
-            <div className="focus-card"><div className="focus-icon"><Headphones size={16} /></div><div><p className="micro-label">CURRENT FOCUS</p><strong>Creative direction</strong></div><span className="focus-time">32:18</span></div>
-          </div>
-        </div>
-
-        <aside className="activity-panel">
-          <div className="panel-heading"><div><p className="micro-label">LIVE FEED</p><h2>Activity</h2></div><button className="icon-button" aria-label="Expand activity"><Grid2X2 size={15} /></button></div>
-          <div className="pulse-card"><div className="pulse-visual"><span /><span /><span /></div><div><p className="micro-label">NOVA PULSE</p><strong>Quietly observing</strong><p>3 active contexts</p></div></div>
-          <div className="activity-list">{activity.map((item, index) => <div className="activity-item" key={`${item.time}-${index}`}><span className={`activity-dot ${item.tone}`} /><div><p>{item.label}</p><span>{item.detail}</span></div><time>{item.time}</time></div>)}</div>
-          <button className="view-all">View all activity <ArrowUpRight size={14} /></button>
-        </aside>
-      </section>
-
-      <form className="command-dock" onSubmit={submitCommand}><button type="button" className={`listen-button ${isListening ? 'listening' : ''}`} onClick={() => setIsListening(!isListening)} aria-label={isListening ? 'Stop listening' : 'Start listening'}>{isListening ? <X size={18} /> : <Mic size={18} />}</button><Command size={15} className="command-symbol" /><input value={command} onChange={(event) => setCommand(event.target.value)} placeholder="Direct NOVA..." aria-label="Command NOVA" /><span className="dock-hint">Enter to send</span><button className="send-button" type="submit" aria-label="Send command"><Send size={16} /></button></form>
-      <footer className="shell-footer"><span><Cpu size={13} /> NOVA OS 1.4.0</span><span>ENCRYPTED SESSION <i /></span></footer>
-    </main>
-  )
+  const [ambient, setAmbient] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [transcript, setTranscript] = useState('Ask NOVA to move with you through your work.')
+  const [events, setEvents] = useState(['Listening for your next direction', 'Indexed 3 active workspaces', 'Focus session is ready'])
+  const run = (text: string) => { if (!text.trim()) return; setTranscript(text); setCommand(''); setState('thinking'); setEvents((e) => [`Working: ${text}`, ...e.slice(0, 2)]); window.setTimeout(() => { setState('speaking'); setTranscript('I’m on it. I found the right context and will keep working in the background.'); window.setTimeout(() => setState('ready'), 1900) }, 1100) }
+  const pageTitle = active === 'Presence' ? 'NOVA is present.' : active === 'Tasks' ? 'Work that keeps moving.' : active === 'Memory' ? 'Context, under your control.' : active === 'Files' ? 'Your workspace, understood.' : active === 'Skills' ? 'Capabilities at the edge.' : 'Tune the intelligence.'
+  if (ambient) return <><div className="ambient-desktop"><div className="desktop-hint"><Monitor size={14} /> NOVA is working with your desktop <span>VS Code · active context</span></div><div className="ambient-task"><span className="live-dot" /> {state === 'thinking' ? 'Analyzing VS Code...' : 'Ready when you are'}</div></div><AmbientOrb state={state} onExpand={() => setAmbient(false)} onToggle={() => setState(state === 'listening' ? 'ready' : 'listening')} /><button className="ambient-expand" onClick={() => setAmbient(false)}>Open full NOVA</button></>
+  return <main className="nova-app">
+    <div className="ambient-grid" />
+    <aside className="sidebar"><div className="brand"><div className="brand-mark">N</div><span>NOVA <small>OS</small></span></div><div className="nav-label">WORKSPACE</div><nav>{nav.map(({ label, icon: Icon }) => <button key={label} className={active === label ? 'active' : ''} onClick={() => setActive(label)}><Icon size={16} /><span>{label}</span>{label === 'Tasks' && <b>2</b>}</button>)}</nav><div className="sidebar-foot"><div className="user-chip"><div>AR</div><span>Alex Rivera<small>Local session</small></span></div><button className="help" aria-label="Help"><CircleHelp size={16} /></button></div></aside>
+    <section className="main-view"><header className="topbar"><div className="crumb"><span>NOVA</span><ChevronRight size={13} /> {active}</div><div className="top-actions"><span className="online"><i /> Online · Gemini Live</span><button aria-label="Search"><Search size={16} /></button><button aria-label="Notifications"><Bell size={16} /><em /></button><button aria-label="More"><MoreHorizontal size={18} /></button></div></header>
+      <div className="page-body"><div className="page-intro"><div><p className="kicker"><Sparkles size={13} /> INTELLIGENCE CORE <span>● ONLINE</span></p><h1>{pageTitle}</h1><p>Voice-first computing that follows your workflow, not the other way around.</p></div><button className="window-control" onClick={() => setAmbient(true)}><Square size={13} /> Minimize to ambient orb</button></div>
+        {active === 'Presence' ? <div className="presence-grid"><section className="presence-stage"><div className="stage-top"><span>CORE ACTIVITY</span><span><i className="live-dot" /> {state === 'ready' ? 'Awaiting input' : state}</span></div><div className="core-wrap" onClick={() => setState(state === 'listening' ? 'ready' : 'listening')} role="button" tabIndex={0} aria-label="Toggle NOVA listening"><IntelligenceCore state={state} /></div><div className="state-line"><strong>{state === 'ready' ? 'NOVA' : state === 'speaking' ? 'NOVA is speaking' : state === 'thinking' ? 'Working on it' : 'Listening'}</strong><span>{state === 'ready' ? 'Your ambient intelligence is ready.' : transcript}</span></div><div className="transcript"><div><span>LIVE TRANSCRIPT</span><small>00:04</small></div><p>{transcript}</p></div><div className="voice-actions"><button className={state === 'listening' ? 'listening' : ''} onClick={() => setState(state === 'listening' ? 'ready' : 'listening')}><Mic size={17} /> {state === 'listening' ? 'Listening' : 'Speak to NOVA'}</button><button onClick={() => setAmbient(true)}><Monitor size={16} /> Stay with me</button></div></section><aside className="proof-panel"><div className="panel-title"><div><span>PROOF OF WORK</span><h2>Working memory</h2></div><Activity size={16} /></div><div className="work-card"><div className="work-icon"><FileText size={16} /></div><div><strong>Thermodynamics assignment</strong><small>Active task · 68% complete</small></div><span>...</span></div><div className="steps"><div className="done"><i>✓</i><span>Found assignment context<small>Documents / School</small></span><time>done</time></div><div className="done"><i>✓</i><span>Identified requirements<small>3 sources matched</small></span><time>done</time></div><div className="current"><i><span /></i><span>Researching thermodynamics<small>Gathering useful sources</small></span><time>now</time></div><div><i>○</i><span>Creating document<small>Waiting</small></span></div></div><button className="view-task" onClick={() => setActive('Tasks')}>Open task workspace <ChevronRight size={14} /></button></aside></div> : <div className="secondary-grid">{(active === 'Tasks' ? ['Thermodynamics assignment','Prepare launch brief','Organize downloads'] : active === 'Memory' ? ['Writing preferences','Frequently used apps','Active projects'] : active === 'Files' ? ['School / Assignments','Work / NOVA','Downloads / Recent'] : active === 'Skills' ? ['Vision & screen awareness','Browser control','Document creation'] : ['Voice & audio','Models','Privacy & permissions']).map((item, i) => <article key={item}><div className="list-icon">{active === 'Tasks' ? <Zap size={17} /> : active === 'Files' ? <FolderOpen size={17} /> : active === 'Skills' ? <Bot size={17} /> : <Gauge size={17} />}</div><div><span>{active.toUpperCase()}</span><h3>{item}</h3><p>{i === 0 ? 'Active now · NOVA is keeping context' : 'Ready to inspect and manage'}</p></div><ChevronRight size={16} /></article>)}</div>}
+      </div><footer className="footer"><span><Wifi size={12} /> LOCAL SESSION ENCRYPTED</span><span>NOVA OS 1.4.0 · <i className="live-dot" /> ALL SYSTEMS NOMINAL</span></footer></section>
+    <form className="command-bar" onSubmit={(e) => { e.preventDefault(); run(command) }}><button type="button" aria-label="Toggle microphone" onClick={() => setState(state === 'listening' ? 'ready' : 'listening')}><Mic size={17} /></button><span>/</span><input value={command} onChange={(e) => setCommand(e.target.value)} placeholder="Direct NOVA..." aria-label="Direct NOVA" /><kbd>⌘ K</kbd><button type="submit" aria-label="Send command"><Play size={14} fill="currentColor" /></button></form>
+  </main>
 }
